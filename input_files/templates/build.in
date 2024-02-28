@@ -1,0 +1,81 @@
+# LJ Fluid
+units		lj
+atom_style	full/gc/HAdResS
+dimension       3
+boundary	p p p 
+
+variable    root        index LJ_1
+variable 	Nrun        equal  5000000   # Number of steps to run
+variable 	NrunB       equal 1000000   # Number of steps to run
+variable 	Ndump       equal 300      # Save thermo and trajectory data
+variable 	Ntrj        equal  100000      # Save thermo and trajectory data
+variable	Nrestart    equal 200000      # Save restart point
+
+variable 	Text     equal 2.   # System temperature
+
+variable        Lx equal  30.0 # Box x length 
+variable        Ly equal  10 # Box y length 
+variable        Lz equal  10 # Box z length
+
+variable 	Volu equal Lx*Ly*Lz
+
+variable        half_Lx equal  ${Lx}/2.0
+variable        half_Ly equal  ${Ly}/2.0
+variable        half_Lz equal  ${Lz}/2.0
+
+variable        N  equal   3472
+
+#######################################################################
+molecule	mol1 LJ_A.dat
+
+neighbor 0.5 bin
+neigh_modify every 1 delay 0 check yes
+
+region  box block -${half_Lx} ${half_Lx} -${half_Ly} ${half_Ly} -${half_Lz} ${half_Lz}
+create_box	1 box  # number of atom types
+
+create_atoms	0 random ${N} 27119 box mol mol1 28586
+
+mass * 1.0
+
+pair_style	lj/cut 2.5
+pair_modify shift yes tail no  mix geometric
+
+#                    e  sig
+pair_coeff	* * 1.0 1.00 2.5
+pair_coeff	1 1 1.0 1.00 2.5
+
+########################################################################
+
+print "Atoms created"
+velocity        all create ${Text} 51104 dist uniform
+
+print "Velocities created"
+minimize 1.0e-4 1.0e-6 100 10000
+
+print "Energy minimized"
+
+########################################################################
+
+
+compute         msd all msd com yes
+
+thermo_modify 	flush yes
+thermo 		${Ndump}
+thermo_style custom step temp press c_msd[4]
+
+group A  type 1
+fix DensityA  A  ave/spatial 10 500 5000 x lower 0.5 density/number ave one file Dens_A_${root}.profile
+
+timestep 0.001
+fix 1 all nvt temp ${Text} ${Text} 100.0
+
+#run ${Nrun}
+
+dump trj all custom ${Ntrj} ${root}.lammpstrj id type element xu yu zu
+
+run ${NrunB}
+
+write_restart restart.LJ_end_of_${root}
+
+    

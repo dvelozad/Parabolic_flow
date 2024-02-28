@@ -1,0 +1,16 @@
+#!/bin/bash
+#SBATCH -o build_lj.out
+#SBATCH -e build_lj.err
+#SBATCH -J build_lj
+
+#SBATCH --partition=CPU_Std32
+#SBATCH --ntasks=32
+#SBATCH --ntasks-per-core=1
+
+#SBATCH --mail-type=END
+#SBATCH --mail-user=diazd@mpip-mainz.mpg.de
+
+# Wall clock limit:
+#SBATCH --time=32:00:00
+
+mpirun -np 32 lmp_mpi -in build_lj.in

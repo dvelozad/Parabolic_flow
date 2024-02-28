@@ -1,0 +1,64 @@
+# LJ Fluid with Walls and Harmonic Wall Interactions
+units        lj
+atom_style   full
+dimension    3
+boundary     p p p
+
+# System variables
+variable     label      equal   build_lj
+variable     Ns         equal   1000              # Number of solvent particles
+variable     Nw         equal   2000              # Number of wall particles
+variable     Lx         equal   10.0              # Box x length
+variable     Ly         equal   10.0              # Box y length
+variable     Lz         equal   10.0              # Box z length, adjustable based on pressure
+variable     epsilon    equal   1         # Interaction energy scale
+variable     sigma      equal   1           # Particle size
+variable     eta        equal   1             # Interaction strength parameter
+variable     system_temp equal  2.0     # System temperature
+variable     pressure   equal   2.65        # System pressure
+variable     dt         equal   0.001       # Time step
+variable     kappa      equal   1000           # Spring constant for wall-wall harmonic interactions
+variable     r0         equal   1.1626              # Equilibrium distance for wall-wall interactions
+
+# Create simulation box
+region       box block 0 10.0 0 10.0 0 10.0
+create_box   2 box
+
+# Pair styles for non-bonded interactions
+pair_style   hybrid/overlay lj/cut 2.5
+pair_coeff   1 1 lj/cut 1 1 2.5  # s-s interactions
+pair_coeff   1 2 lj/cut 1 1 1.122462048309373  # s-w interactions using WCA potential
+
+# Create particles
+create_atoms 1 random 1000 12345 box
+create_atoms 2 random 2000 67890 box
+
+# Set masses
+mass 1 1.0
+mass 2 1.0
+
+print "Particles created"
+
+# Initial equilibration with harmonic interactions among wall particles
+bond_style   harmonic
+bond_coeff   2 1000 1.1626
+
+print "Bound spring created"
+
+# NOTE: Define bonds between wall particles here, assuming a pre-defined list or using a script to generate
+
+timesetp 0.001
+
+# Initial equilibration in NPT ensemble
+fix          1 all npt temp 2.0 2.0 (10*${dt}) aniso 2.65 2.65 (100*${dt})
+thermo       100
+run          5000  # Duration for initial equilibration
+
+# For production runs, freeze wall particles in their final equilibrium positions
+unfix        1  # Remove NPT ensemble fix
+fix          2 wall setforce 0.0 0.0 0.0  # Freeze wall particles
+
+# Continue with production run
+run          2000000
+
+write_restart /data/bee8/diazd/projects/Parabolic_flow/scripts/../output_files/BUILD/BUILD_TEST/${label}.restart
