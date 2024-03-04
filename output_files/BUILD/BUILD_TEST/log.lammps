@@ -1,0 +1,36 @@
+LAMMPS (2 Aug 2023 - Update 2)
+# Initialization
+units       lj
+dimension   3
+boundary    p p p
+atom_style  atomic
+
+lattice     fcc 0.2
+Lattice spacing in x,y,z = 2.7144176 2.7144176 2.7144176
+region          box block -10 10 -10 10 -10 10
+create_box	    2 box
+Created orthogonal box = (-27.144176 -27.144176 -27.144176) to (27.144176 27.144176 27.144176)
+  1 by 1 by 1 MPI processor grid
+create_atoms	1 box
+Created 32000 atoms
+  using lattice units in orthogonal box = (-27.144176 -27.144176 -27.144176) to (27.144176 27.144176 27.144176)
+  create_atoms CPU = 0.005 seconds
+
+
+# Define FCC lattice for walls
+region      1 block -8 8 -8 8 -8 8 units lattice
+group	    flow region 1
+17969 atoms in group flow
+group	     boundary subtract all flow
+14031 atoms in group boundary
+
+mass        1 1.0
+
+# Define harmonic interaction with specified spring constant and cutoff
+pair_style harmonic/cut
+pair_coeff * * 10 1 2.1  # Adjusted for simplicity
+
+# Initialize velocities (optional, could start from rest or specify manually)
+velocity    all set 0.0 0.0 0.0
+ERROR: Not all per-type masses are set. Type 2 is missing. (../velocity.cpp:61)
+Last command: velocity    all set 0.0 0.0 0.0

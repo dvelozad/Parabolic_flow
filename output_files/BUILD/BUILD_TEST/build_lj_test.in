@@ -1,0 +1,30 @@
+# Initialization
+units       lj
+dimension   3
+boundary    p p p
+atom_style  atomic
+
+region      box block -10 10 -10 10 -10 10
+create_box  1 box
+
+# Manually create only two atoms
+create_atoms 1 single -1.0 0.0 0.0 units box
+create_atoms 1 single 1.0 0.0 0.0 units box
+
+mass        1 1.0
+
+# Define harmonic interaction with specified spring constant and cutoff
+pair_style harmonic/cut
+pair_coeff * * 10 1 2.1  # Adjusted for simplicity
+
+# Initialize velocities (optional, could start from rest or specify manually)
+velocity    all set 0.0 0.0 0.0
+
+fix         1 all nve  # Integrate the equations of motion
+
+# Output settings
+dump        trj all custom 1 dump.harmonic.lammpstrj id type element x y z
+thermo      5
+thermo_style custom step temp pe etotal
+
+run         1000

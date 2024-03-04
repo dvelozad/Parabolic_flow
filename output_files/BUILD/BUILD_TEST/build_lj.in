@@ -25,9 +25,10 @@ region       box block 0 10.0 0 10.0 0 10.0
 create_box   2 box
 
 # Pair styles for non-bonded interactions
-pair_style   hybrid/overlay lj/cut 2.5
-pair_coeff   1 1 lj/cut 1 1 2.5  # s-s interactions
-pair_coeff   1 2 lj/cut 1 1 1.122462048309373  # s-w interactions using WCA potential
+pair_style   hybrid/overlay lj/cut 2.5 harmonic/cut
+pair_coeff   1 1 lj/cut 1 1 2.5                 # s-s interactions
+pair_coeff   1 2 lj/cut 1 1 1.122462048309373   # s-w interactions using WCA potential
+pair_coeff   2 2 harmonic/cut 1000 1.1626 2.5   # w-w 
 
 # Create particles
 create_atoms 1 random 1000 12345 box
