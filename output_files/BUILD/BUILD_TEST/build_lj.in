@@ -1,6 +1,6 @@
 # LJ Fluid with Walls and Harmonic Wall Interactions
 units        lj
-atom_style   full
+atom_style   full/gc/HAdResS
 dimension    3
 boundary     p p p
 

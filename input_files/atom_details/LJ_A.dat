@@ -1,10 +1,26 @@
-# FCC Wall Segment
+# molecule
 
-4 atoms
-0 bonds
+1 atoms
 
-Atoms
-1 1 0.0 0.0 0.0
-2 1 0.5 0.5 0.0
-3 1 0.5 0.0 0.5
-4 1 0.0 0.5 0.5
+Coords
+
+1 0 0 0
+
+Types
+
+1 1
+
+Masses
+
+1 1.0
+
+replambdaH
+
+1 1
+
+moltypeH
+
+1 1
+
+
+

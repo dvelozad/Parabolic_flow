@@ -1,0 +1,72 @@
+# Initialization
+units       lj
+dimension   3
+boundary    p p p
+atom_style   full/gc/HAdResS
+
+# Assuming mol1 is defined correctly in the provided file for both uses
+molecule     mol1 /home/deo/Documents/projects/PhD/Parabolic_flow/input_files/atom_details/LJ_A.dat
+
+neighbor 0.5 bin
+neigh_modify every 1 delay 0 check yes
+
+lattice         fcc 0.9
+region          box block -2 15 -2 7 -2 7 units lattice
+create_box      3 box
+
+# Regions for boundary and flow
+region          boundary_reg block 1 14 1 6 1 6 units lattice
+region          hollow block 2 13 2 5 2 5 units lattice
+region          flow_reg block 2.1 12.9 2.1 4.9 2.9 4.9 units lattice
+
+# Creating boundary atoms
+create_atoms    3 region boundary_reg
+group           boundary region boundary_reg 
+
+# Creating hollow space in the boundary
+delete_atoms    region hollow
+
+# Creating flow atoms using molecule mol1
+create_atoms    1 region flow_reg mol mol1 2851
+group           flow region flow_reg
+
+mass            1 1.0
+mass            2 1.0
+mass            3 1.0
+
+# Pair styles for non-bonded interactions
+pair_style      hybrid/overlay lj/cut 2.5
+pair_modify     shift yes tail no mix geometric
+
+pair_coeff      1 1 lj/cut 1 1 2.5                 # s-s interactions
+pair_coeff      1 2 lj/cut 1 1 2.5                 # s-s interactions
+pair_coeff      1 3 lj/cut 1 1 1.122462048309373   # s-w interactions using WCA potential
+
+pair_coeff      2 2 lj/cut 1 1 2.5                 # s-s interactions
+pair_coeff      3 2 lj/cut 1 1 1.122462048309373   # s-w interactions using WCA potential
+pair_coeff      3 3 lj/cut 1 1 2.5   # s-w interactions using WCA potential
+#pair_coeff      3 3 harmonic/cut 1 1.5626 2.5      # w-w 
+
+# Initialize velocities (optional, could start from rest or specify manually)
+reset_atom_ids
+velocity     flow create 2.0 12345 dist uniform
+
+#fix         nve_fix flow nve  # Integrate the equations of motion
+fix          1 flow nvt temp 2.0 2.0 10
+#fix         1 flow npt temp 2.0 2.0 10 aniso 2.65 2.65 100
+
+# Output settings
+dump        trj all custom 10 dump.harmonic.lammpstrj id type element x y z
+thermo      5
+
+compute myTemp flow temp
+thermo_style custom step temp etotal c_myTemp
+
+
+timestep 0.001
+
+fix freezeWall boundary setforce 0.0 0.0 0.0
+
+
+run         100000
+
