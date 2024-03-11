@@ -4,20 +4,34 @@ dimension       3
 boundary        p p p
 atom_style      full/gc/HAdResS
 
+# Variables
+variable     Lx       equal     30.0              # Box x length 
+variable     Ly       equal     10.0              # Box y length 
+variable     Lz       equal     10.0              # Box z length
+variable     half_Lx  equal     ${Lx}/2.0
+variable     half_Ly  equal     ${Ly}/2.0
+variable     half_Lz  equal     ${Lz}/2.0
+variable     Lx_h       equal     28.0              # Box x length 
+variable     Ly_h       equal     8.0              # Box y length 
+variable     Lz_h       equal     8.0              # Box z length
+variable     half_Lx_h  equal     ${Lx_h}/2.0
+variable     half_Ly_h  equal     ${Ly_h}/2.0
+variable     half_Lz_h  equal     ${Lz_h}/2.0
+
 # Assuming mol1 is defined correctly in the provided file for both uses
-molecule     mol1 /home/deo/Documents/projects/PhD/Parabolic_flow/input_files/atom_details/LJ_A.dat
+molecule     mol1 /data/bee8/diazd/projects/Parabolic_flow/input_files/atom_details/LJ_A.dat
 
 neighbor 0.5 bin
 neigh_modify every 1 delay 0 check yes
 
 lattice         fcc 0.9
-region          box block -2 15 -2 7 -2 7 units lattice
+region          box block -${half_Lx} ${half_Lx} -${half_Ly} ${half_Ly} -${half_Lz} ${half_Lz} units lattice
 create_box      2 box
 
 # Regions for boundary and flow
-region          boundary_reg block 1 14 1 6 1 6 units lattice
-region          hollow block 2 13 2 5 2 5 units lattice
-region          flow_reg block 2.1 12.9 2.1 4.9 2.9 4.9 units lattice
+region          boundary_reg block  -${half_Lx} ${half_Lx}      -${half_Ly} ${half_Ly}      -${half_Lz} ${half_Lz}      units lattice
+region          hollow block        -${half_Lx_h} ${half_Lx_h}  -${half_Ly_h} ${half_Ly_h}  -${half_Lz_h} ${half_Lz_h}  units lattice
+region          flow_reg block      -${half_Lx_h} ${half_Lx_h}  -${half_Ly_h} ${half_Ly_h}  -${half_Lz_h} ${half_Lz_h}  units lattice
 
 # Creating boundary atoms
 create_atoms    2 region boundary_reg
@@ -33,14 +47,14 @@ group           flow region flow_reg
 mass            1 1.0
 mass            2 1.0
 
-
 # Pair styles for non-bonded interactions
-pair_style      hybrid/overlay harmonic/cut lj/cut 2.5
+pair_style      hybrid/overlay lj/cut 2.5
 pair_modify     shift yes tail no mix geometric
 
 pair_coeff      1 1 lj/cut 1 1 2.5                 # s-s interactions
-pair_coeff      1 2 lj/cut 1 1 2.5                 # s-s interactions
-pair_coeff      2 2 harmonic/cut 1000 1.1626 2.5   # w-w 
+pair_coeff      1 2 lj/cut 1 1 1.122462048309373                 # s-s interactions
+pair_coeff      2 2 lj/cut 0 0 1.122462048309373                 # s-s interactions
+#pair_coeff     2 2 harmonic/cut 1000 1.1626 2.5   # w-w 
 
 
 # Initialize velocities (optional, could start from rest or specify manually)
@@ -58,11 +72,9 @@ thermo      5
 compute myTemp flow temp
 thermo_style custom step temp etotal c_myTemp
 
-
 timestep 0.001
 
 fix freezeWall boundary setforce 0.0 0.0 0.0
 
-
-run         100000
-
+run         1000
+write_restart /data/bee8/diazd/projects/Parabolic_flow/output_files/BUILD/BUILD_TEST/TEST.restart

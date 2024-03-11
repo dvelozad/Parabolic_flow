@@ -1,0 +1,394 @@
+LAMMPS (2 Aug 2023 - Update 2)
+# Initialization
+units           lj
+dimension       3
+boundary        p p p
+atom_style      full/gc/HAdResS
+
+# Variables
+variable     Lx       equal     30.0              # Box x length
+variable     Ly       equal     10.0              # Box y length
+variable     Lz       equal     10.0              # Box z length
+variable     half_Lx  equal     ${Lx}/2.0
+variable     half_Lx  equal     30/2.0
+variable     half_Ly  equal     ${Ly}/2.0
+variable     half_Ly  equal     10/2.0
+variable     half_Lz  equal     ${Lz}/2.0
+variable     half_Lz  equal     10/2.0
+variable     Lx_h       equal     28.0              # Box x length
+variable     Ly_h       equal     8.0              # Box y length
+variable     Lz_h       equal     8.0              # Box z length
+variable     half_Lx_h  equal     ${Lx_h}/2.0
+variable     half_Lx_h  equal     28/2.0
+variable     half_Ly_h  equal     ${Ly_h}/2.0
+variable     half_Ly_h  equal     8/2.0
+variable     half_Lz_h  equal     ${Lz_h}/2.0
+variable     half_Lz_h  equal     8/2.0
+
+# Assuming mol1 is defined correctly in the provided file for both uses
+molecule     mol1 /data/bee8/diazd/projects/Parabolic_flow/input_files/atom_details/LJ_A.dat
+Read molecule template mol1:
+  1 molecules
+  0 fragments
+  1 atoms with max type 1
+  0 bonds with max type 0
+  0 angles with max type 0
+  0 dihedrals with max type 0
+  0 impropers with max type 0
+
+neighbor 0.5 bin
+neigh_modify every 1 delay 0 check yes
+
+lattice         fcc 0.9
+Lattice spacing in x,y,z = 1.6441414 1.6441414 1.6441414
+region          box block -${half_Lx} ${half_Lx} -${half_Ly} ${half_Ly} -${half_Lz} ${half_Lz} units lattice
+region          box block -15 ${half_Lx} -${half_Ly} ${half_Ly} -${half_Lz} ${half_Lz} units lattice
+region          box block -15 15 -${half_Ly} ${half_Ly} -${half_Lz} ${half_Lz} units lattice
+region          box block -15 15 -5 ${half_Ly} -${half_Lz} ${half_Lz} units lattice
+region          box block -15 15 -5 5 -${half_Lz} ${half_Lz} units lattice
+region          box block -15 15 -5 5 -5 ${half_Lz} units lattice
+region          box block -15 15 -5 5 -5 5 units lattice
+create_box      2 box
+Created orthogonal box = (-24.662121 -8.2207069 -8.2207069) to (24.662121 8.2207069 8.2207069)
+  1 by 1 by 1 MPI processor grid
+
+# Regions for boundary and flow
+region          boundary_reg block  -${half_Lx} ${half_Lx}      -${half_Ly} ${half_Ly}      -${half_Lz} ${half_Lz}      units lattice
+region          boundary_reg block  -15 ${half_Lx}      -${half_Ly} ${half_Ly}      -${half_Lz} ${half_Lz}      units lattice
+region          boundary_reg block  -15 15      -${half_Ly} ${half_Ly}      -${half_Lz} ${half_Lz}      units lattice
+region          boundary_reg block  -15 15      -5 ${half_Ly}      -${half_Lz} ${half_Lz}      units lattice
+region          boundary_reg block  -15 15      -5 5      -${half_Lz} ${half_Lz}      units lattice
+region          boundary_reg block  -15 15      -5 5      -5 ${half_Lz}      units lattice
+region          boundary_reg block  -15 15      -5 5      -5 5      units lattice
+region          hollow block        -${half_Lx_h} ${half_Lx_h}  -${half_Ly_h} ${half_Ly_h}  -${half_Lz_h} ${half_Lz_h}  units lattice
+region          hollow block        -14 ${half_Lx_h}  -${half_Ly_h} ${half_Ly_h}  -${half_Lz_h} ${half_Lz_h}  units lattice
+region          hollow block        -14 14  -${half_Ly_h} ${half_Ly_h}  -${half_Lz_h} ${half_Lz_h}  units lattice
+region          hollow block        -14 14  -4 ${half_Ly_h}  -${half_Lz_h} ${half_Lz_h}  units lattice
+region          hollow block        -14 14  -4 4  -${half_Lz_h} ${half_Lz_h}  units lattice
+region          hollow block        -14 14  -4 4  -4 ${half_Lz_h}  units lattice
+region          hollow block        -14 14  -4 4  -4 4  units lattice
+region          flow_reg block      -${half_Lx_h} ${half_Lx_h}  -${half_Ly_h} ${half_Ly_h}  -${half_Lz_h} ${half_Lz_h}  units lattice
+region          flow_reg block      -14 ${half_Lx_h}  -${half_Ly_h} ${half_Ly_h}  -${half_Lz_h} ${half_Lz_h}  units lattice
+region          flow_reg block      -14 14  -${half_Ly_h} ${half_Ly_h}  -${half_Lz_h} ${half_Lz_h}  units lattice
+region          flow_reg block      -14 14  -4 ${half_Ly_h}  -${half_Lz_h} ${half_Lz_h}  units lattice
+region          flow_reg block      -14 14  -4 4  -${half_Lz_h} ${half_Lz_h}  units lattice
+region          flow_reg block      -14 14  -4 4  -4 ${half_Lz_h}  units lattice
+region          flow_reg block      -14 14  -4 4  -4 4  units lattice
+
+# Creating boundary atoms
+create_atoms    2 region boundary_reg
+Created 12000 atoms
+  using lattice units in orthogonal box = (-24.662121 -8.2207069 -8.2207069) to (24.662121 8.2207069 8.2207069)
+  create_atoms CPU = 0.002 seconds
+group           boundary region boundary_reg
+12000 atoms in group boundary
+
+# Creating hollow space in the boundary
+delete_atoms    region hollow
+WARNING: Ignoring 'compress yes' for molecular system (../delete_atoms.cpp:140)
+Deleted 8237 atoms, new total = 3763
+
+# Creating flow atoms using molecule mol1
+create_atoms    0 region flow_reg mol mol1 2851
+WARNING: Molecule attributes do not match system attributes (../molecule.cpp:1945)
+Created 8237 atoms
+  using lattice units in orthogonal box = (-24.662121 -8.2207069 -8.2207069) to (24.662121 8.2207069 8.2207069)
+  create_atoms CPU = 0.002 seconds
+group           flow region flow_reg
+8237 atoms in group flow
+
+mass            1 1.0
+mass            2 1.0
+
+# Pair styles for non-bonded interactions
+pair_style      hybrid/overlay lj/cut 2.5
+pair_modify     shift yes tail no mix geometric
+
+pair_coeff      1 1 lj/cut 1 1 2.5                 # s-s interactions
+pair_coeff      1 2 lj/cut 1 1 1.122462048309373                 # s-s interactions
+pair_coeff      2 2 lj/cut 0 0 1.122462048309373                 # s-s interactions
+#pair_coeff      2 2 harmonic/cut 1000 1.1626 2.5   # w-w
+
+
+# Initialize velocities (optional, could start from rest or specify manually)
+reset_atom_ids
+
+WARNING: 'reset_atom_ids' has been renamed to 'reset_atoms id'. Please update your input.
+
+reset_atoms id
+Resetting atom IDs ...
+Generated 0 of 1 mixed pair_coeff terms from geometric mixing rule
+Neighbor list info ...
+  update: every = 1 steps, delay = 0 steps, check = yes
+  max neighbors/atom: 2000, page size: 100000
+  master list distance cutoff = 3
+  ghost atom cutoff = 3
+  binsize = 1.5, bins = 33 11 11
+  1 neighbor lists, perpetual/occasional/extra = 1 0 0
+  (1) pair lj/cut, perpetual
+      attributes: half, newton on
+      pair build: half/bin/newton
+      stencil: half/bin/3d
+      bin: standard
+Finding 1-2 1-3 1-4 neighbors ...
+  special bond factors lj:    0        0        0       
+  special bond factors coul:  0        0        0       
+     0 = max # of 1-2 neighbors
+     0 = max # of 1-3 neighbors
+     0 = max # of 1-4 neighbors
+     1 = max # of special neighbors
+  special bonds CPU = 0.001 seconds
+velocity        flow create 2.0 12345 dist uniform
+
+#fix            nve_fix flow nve  # Integrate the equations of motion
+fix             1 flow nvt temp 2.0 2.0 10
+#fix            1 flow npt temp 2.0 2.0 10 aniso 2.65 2.65 100
+
+# Output settings
+dump        trj all custom 10 dump.harmonic.lammpstrj id type element x y z
+thermo      5
+
+compute myTemp flow temp
+thermo_style custom step temp etotal c_myTemp
+
+timestep 0.001
+
+fix freezeWall boundary setforce 0.0 0.0 0.0
+
+run         1000
+Generated 0 of 1 mixed pair_coeff terms from geometric mixing rule
+Per MPI rank memory allocation (min/avg/max) = 16.79 | 16.79 | 16.79 Mbytes
+   Step          Temp          TotEng        c_myTemp   
+         0   1.3727811     -2.1506597      2            
+         5   1.3696409     -2.1506609      1.9954251    
+        10   1.3597046     -2.1506644      1.9809489    
+        15   1.3423071     -2.1506708      1.9556026    
+        20   1.3162502     -2.1506795      1.9176403    
+        25   1.279946      -2.1506892      1.864749     
+        30   1.2317417     -2.1506987      1.7945202    
+        35   1.1702272     -2.1507055      1.7048999    
+        40   1.0948842     -2.1507056      1.595133     
+        45   1.0070633     -2.1506945      1.4671871    
+        50   0.9109685     -2.1506698      1.3271869    
+        55   0.81394773    -2.1506359      1.1858376    
+        60   0.72526738    -2.1506035      1.0566395    
+        65   0.65343485    -2.1505839      0.95198697   
+        70   0.60350945    -2.1505813      0.87925084   
+        75   0.57602654    -2.1505923      0.83921108   
+        80   0.56782079    -2.1506097      0.82725615   
+        85   0.57380119    -2.1506267      0.83596898   
+        90   0.58861269    -2.1506401      0.85754781   
+        95   0.60768132    -2.1506483      0.88532882   
+       100   0.62763087    -2.1506517      0.91439325   
+       105   0.6462782     -2.1506512      0.94156048   
+       110   0.66242092    -2.150648       0.96507876   
+       115   0.67557258    -2.1506433      0.98423937   
+       120   0.68571859    -2.1506373      0.99902105   
+       125   0.69313144    -2.1506308      1.0098208    
+       130   0.69823378    -2.150624       1.0172544    
+       135   0.70151386    -2.1506172      1.0220331    
+       140   0.70346702    -2.1506102      1.0248787    
+       145   0.70455254    -2.1506034      1.0264602    
+       150   0.70514444    -2.1505969      1.0273225    
+       155   0.70549805    -2.1505905      1.0278377    
+       160   0.70576161    -2.150584       1.0282217    
+       165   0.70603647    -2.1505771      1.0286221    
+       170   0.70643038    -2.1505698      1.029196     
+       175   0.7070668     -2.1505624      1.0301232    
+       180   0.70806728    -2.1505547      1.0315808    
+       185   0.70952971    -2.1505469      1.0337114    
+       190   0.71151272    -2.1505388      1.0366004    
+       195   0.7140152     -2.1505309      1.0402463    
+       200   0.71694272    -2.1505229      1.0445114    
+       205   0.72010169    -2.1505148      1.0491137    
+       210   0.72325014    -2.1505065      1.0537006    
+       215   0.72618435    -2.1504974      1.0579755    
+       220   0.72879893    -2.1504877      1.0617846    
+       225   0.73109893    -2.1504773      1.0651355    
+       230   0.73315612    -2.1504666      1.0681326    
+       235   0.73505838    -2.1504557      1.070904     
+       240   0.7368473     -2.1504449      1.0735103    
+       245   0.73849447    -2.1504342      1.07591      
+       250   0.73991881    -2.1504231      1.0779852    
+       255   0.74101747    -2.1504118      1.0795858    
+       260   0.74173291    -2.1503995      1.0806281    
+       265   0.74214001    -2.1503864      1.0812212    
+       270   0.74248023    -2.1503725      1.0817169    
+       275   0.74309732    -2.1503587      1.0826159    
+       280   0.74428144    -2.1503454      1.0843411    
+       285   0.74612507    -2.1503326      1.087027     
+       290   0.74849092    -2.1503199      1.0904738    
+       295   0.75113577    -2.1503068      1.0943271    
+       300   0.75386132    -2.1502927      1.098298     
+       305   0.75657122    -2.1502784      1.102246     
+       310   0.7592242     -2.1502637      1.1061111    
+       315   0.76174697    -2.150249       1.1097865    
+       320   0.76399194    -2.1502343      1.1130572    
+       325   0.76576958    -2.1502192      1.1156471    
+       330   0.76691749    -2.1502036      1.1173194    
+       335   0.7673452     -2.1501875      1.1179426    
+       340   0.76703819    -2.1501708      1.1174953    
+       345   0.76606908    -2.1501534      1.1160834    
+       350   0.76461046    -2.1501355      1.1139583    
+       355   0.76290154    -2.1501175      1.1114686    
+       360   0.76118334    -2.1500995      1.1089654    
+       365   0.75965532    -2.1500813      1.1067392    
+       370   0.7584807     -2.1500631      1.1050279    
+       375   0.75777935    -2.1500449      1.1040061    
+       380   0.75758552    -2.1500269      1.1037237    
+       385   0.75784305    -2.1500086      1.1040989    
+       390   0.75844996    -2.1499903      1.1049831    
+       395   0.75927073    -2.1499717      1.1061789    
+       400   0.76014099    -2.1499529      1.1074468    
+       405   0.76090789    -2.1499334      1.1085641    
+       410   0.7614901     -2.1499134      1.1094123    
+       415   0.76190274    -2.1498928      1.1100135    
+       420   0.76225191    -2.1498715      1.1105222    
+       425   0.76271153    -2.1498498      1.1111918    
+       430   0.76346661    -2.1498283      1.1122919    
+       435   0.76463298    -2.1498069      1.1139911    
+       440   0.76617967    -2.1497858      1.1162445    
+       445   0.76794683    -2.1497645      1.1188191    
+       450   0.76973934    -2.1497427      1.1214306    
+       455   0.77140109    -2.1497206      1.1238516    
+       460   0.77282916    -2.1496979      1.1259321    
+       465   0.77396715    -2.1496747      1.1275901    
+       470   0.77482589    -2.149651       1.1288412    
+       475   0.77549512    -2.1496268      1.1298162    
+       480   0.77609547    -2.1496026      1.1306908    
+       485   0.77668934    -2.1495786      1.131556     
+       490   0.77722281    -2.1495547      1.1323332    
+       495   0.77756331    -2.1495305      1.1328293    
+       500   0.77757966    -2.1495059      1.1328531    
+       505   0.77720025    -2.1494808      1.1323004    
+       510   0.77642118    -2.1494552      1.1311653    
+       515   0.77532391    -2.1494287      1.1295667    
+       520   0.77412366    -2.1494015      1.1278181    
+       525   0.77316886    -2.149374       1.1264271    
+       530   0.77282055    -2.1493467      1.1259196    
+       535   0.77329473    -2.1493202      1.1266104    
+       540   0.77458106    -2.1492942      1.1284845    
+       545   0.77646223    -2.149268       1.1312251    
+       550   0.77861967    -2.1492415      1.1343683    
+       555   0.78073468    -2.1492146      1.1374497    
+       560   0.78253856    -2.1491868      1.1400777    
+       565   0.78383988    -2.1491585      1.1419736    
+       570   0.78454251    -2.1491296      1.1429973    
+       575   0.78465797    -2.1491001      1.1431655    
+       580   0.78428488    -2.1490703      1.1426219    
+       585   0.7835613     -2.1490402      1.1415678    
+       590   0.78261871    -2.1490102      1.1401945    
+       595   0.78154542    -2.1489803      1.1386308    
+       600   0.78037554    -2.1489505      1.1369264    
+       605   0.77911566    -2.1489202      1.1350909    
+       610   0.77778834    -2.1488896      1.1331572    
+       615   0.77646822    -2.1488586      1.1312339    
+       620   0.77527714    -2.1488276      1.1294986    
+       625   0.77430202    -2.1487967      1.1280779    
+       630   0.7735231     -2.1487658      1.1269431    
+       635   0.77284898    -2.1487347      1.125961     
+       640   0.77220589    -2.148703       1.1250241    
+       645   0.77159222    -2.1486708      1.12413      
+       650   0.77106267    -2.1486384      1.1233585    
+       655   0.77068715    -2.1486054      1.1228115    
+       660   0.77055884    -2.1485722      1.1226245    
+       665   0.77080951    -2.1485386      1.1229897    
+       670   0.77157312    -2.1485054      1.1241022    
+       675   0.77288677    -2.1484722      1.1260161    
+       680   0.77463673    -2.1484391      1.1285656    
+       685   0.77659536    -2.1484059      1.1314191    
+       690   0.77849059    -2.1483724      1.1341802    
+       695   0.78005867    -2.1483385      1.1364648    
+       700   0.78107977    -2.1483038      1.1379524    
+       705   0.78144132    -2.1482683      1.1384792    
+       710   0.78116764    -2.1482321      1.1380804    
+       715   0.78039197    -2.1481955      1.1369504    
+       720   0.77929222    -2.1481588      1.1353481    
+       725   0.77803655    -2.148122       1.1335188    
+       730   0.77676639    -2.1480851      1.1316683    
+       735   0.77561137    -2.1480482      1.1299855    
+       740   0.77468699    -2.1480112      1.1286388    
+       745   0.77406482    -2.1479742      1.1277324    
+       750   0.77375685    -2.1479372      1.1272837    
+       755   0.77371665    -2.1479001      1.1272251    
+       760   0.77387065    -2.1478625      1.1274495    
+       765   0.77417933    -2.1478244      1.1278992    
+       770   0.77467876    -2.1477857      1.1286268    
+       775   0.77545271    -2.1477469      1.1297544    
+       780   0.77653723    -2.1477083      1.1313344    
+       785   0.77784322    -2.1476699      1.1332371    
+       790   0.77917701    -2.1476313      1.1351803    
+       795   0.78031733    -2.1475924      1.1368416    
+       800   0.7810859     -2.1475527      1.1379614    
+       805   0.78142784    -2.147512       1.1384595    
+       810   0.78148819    -2.1474701      1.1385474    
+       815   0.78159708    -2.1474279      1.1387061    
+       820   0.78210391    -2.1473863      1.1394445    
+       825   0.78316921    -2.1473455      1.1409965    
+       830   0.78468798    -2.147305       1.1432092    
+       835   0.78637378    -2.1472644      1.1456652    
+       840   0.7879157     -2.1472229      1.1479117    
+       845   0.78912057    -2.1471804      1.149667     
+       850   0.78994005    -2.1471374      1.1508609    
+       855   0.79041044    -2.1470941      1.1515462    
+       860   0.79058792    -2.1470505      1.1518048    
+       865   0.79055323    -2.1470065      1.1517543    
+       870   0.79040753    -2.1469624      1.151542     
+       875   0.79022128    -2.1469185      1.1512707    
+       880   0.789984      -2.1468745      1.150925     
+       885   0.78966033    -2.1468299      1.1504534    
+       890   0.78928796    -2.146785       1.1499109    
+       895   0.78896052    -2.1467399      1.1494339    
+       900   0.78870147    -2.1466953      1.1490565    
+       905   0.78839952    -2.1466506      1.1486165    
+       910   0.78789769    -2.1466055      1.1478854    
+       915   0.78713242    -2.1465596      1.1467705    
+       920   0.78619666    -2.1465129      1.1454072    
+       925   0.78529971    -2.1464663      1.1441004    
+       930   0.78463662    -2.1464199      1.1431344    
+       935   0.78425978    -2.1463741      1.1425854    
+       940   0.78407071    -2.1463281      1.1423099    
+       945   0.7839236     -2.1462816      1.1420956    
+       950   0.78373651    -2.1462346      1.141823     
+       955   0.7835164     -2.1461871      1.1415023    
+       960   0.78332482    -2.1461393      1.1412232    
+       965   0.78324872    -2.1460911      1.1411124    
+       970   0.78337908    -2.1460428      1.1413023    
+       975   0.78378051    -2.1459946      1.1418871    
+       980   0.78445534    -2.1459465      1.1428703    
+       985   0.78531843    -2.1458984      1.1441277    
+       990   0.78621987    -2.1458501      1.145441     
+       995   0.78700411    -2.1458012      1.1465836    
+      1000   0.78754858    -2.145752       1.1473768    
+Loop time of 5.86367 on 1 procs for 1000 steps with 12000 atoms
+
+Performance: 14734.808 tau/day, 170.542 timesteps/s, 2.047 Matom-step/s
+99.6% CPU use with 1 MPI tasks x no OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 3.9007     | 3.9007     | 3.9007     |   0.0 | 66.52
+Bond    | 0.00029252 | 0.00029252 | 0.00029252 |   0.0 |  0.00
+Neigh   | 0.27223    | 0.27223    | 0.27223    |   0.0 |  4.64
+Comm    | 0.4364     | 0.4364     | 0.4364     |   0.0 |  7.44
+Output  | 0.91814    | 0.91814    | 0.91814    |   0.0 | 15.66
+Modify  | 0.24048    | 0.24048    | 0.24048    |   0.0 |  4.10
+Other   |            | 0.09538    |            |       |  1.63
+
+Nlocal:          12000 ave       12000 max       12000 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:          12431 ave       12431 max       12431 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:         378899 ave      378899 max      378899 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 378899
+Ave neighs/atom = 31.574917
+Ave special neighs/atom = 0
+Neighbor list builds = 18
+Dangerous builds = 0
+write_restart /data/bee8/diazd/projects/Parabolic_flow/output_files/BUILD/BUILD_TEST/TEST.restart
+System init for write_restart ...
+Generated 0 of 1 mixed pair_coeff terms from geometric mixing rule
+Total wall time: 0:00:05

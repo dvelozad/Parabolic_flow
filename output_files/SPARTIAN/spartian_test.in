@@ -1,0 +1,244 @@
+
+# LJ Fluid
+units		lj
+atom_style	full/gc/HAdResS
+dimension       3
+boundary	p p p
+
+variable    root            index spartian
+variable 	Nrun            equal 2000000      # Number of steps to run
+variable 	Ndump           equal 300       # Save thermo and trajectory dataNdumptrj
+variable 	Ndumptrj        equal 300       # Save thermo and trajectory data
+variable	Nrestart        equal 20000    # Save restart point
+variable 	Temp            equal 2.0        # System temperature
+variable    dt              equal 0.001
+
+#######################################################################
+#
+#                     H-AdResS Parameters
+#
+variable Hars_Start         equal    0  # starting time step
+variable Hars_End           equal    2000000  # final time step
+variable Comp_AT_Size       equal    10     # Lenght of Atomistic (high resolution) region
+variable Comp_HY_Size       equal    5      # Length of Hybrid region
+variable Comp_Lam_Exp       equal    7      # Power law exponent
+variable Hyb_Shape          string slab     # Shape of the hybrid region
+variable Comp_Dens_nMolType equal    1      #  Number of molecular types within the low resolution
+#
+# ------------------- Constant pressure route --------------------------
+#
+variable Comp_Pres_Switch    equal 1                #  Constant pressure route switch ( 0: off; 1: on )
+variable Comp_Pres_Start     equal ${Hars_Start}  #  Starting time step of the constant pressure route
+variable Comp_Pres_End       equal ${Hars_End}    #  Ending time step of the constant pressure route
+variable Comp_Pres_Samp_Freq equal 10               #  Sampling time step interval of constant pressure route
+variable Comp_Pres_Freq      equal 5000             #  Time step interval of constant pressure route
+#
+#       Starting time for the constant pressure route step for the i-th component
+variable Comp_Pres_Start_A equal ${Hars_Start}   # A
+#
+#       Bin size of ith component in constant pressure route
+variable Comp_Pres_Lambda_Size_A  equal 0.005
+
+# ------------------- Constant density route --------------------------
+#
+variable Comp_Dens_Switch equal    1             # Constant density route switch ( 0: off; 1: on )
+variable Comp_Dens_Start  equal    ${Hars_Start}# Starting time step of the constant density route
+variable Comp_Dens_End    equal    ${Hars_End}  # Ending time step of the constant density route
+variable Comp_Dens_Samp_Freq equal 10            # Sampling time step interval of constant density route
+variable Comp_Dens_Freq equal      10000         # Time step interval of constant density route ( determinate the number of cycles )
+
+# Starting time for the constant density route step for the i-th component
+variable Comp_Dens_Start_A      equal ${Hars_Start}   # A
+
+# Bin size of the i-th component in constant density route (lenght unit)
+variable Comp_Dens_Bin_Size_A   equal 0.5
+
+# Width of gaussian function in constant density route for the i-th component (lenght unit)
+variable Comp_Dens_Sigma_A      equal 3.0
+
+# Range of gaussian function in density route for the i-th component (lenght unit)
+variable Comp_Dens_Range_Int_A  equal 2.0
+
+# Reference number density in constant density route for the i-th component
+variable Comp_Dens_Ref_Dens_A   equal 0.7
+
+# Prefactor in constant density route for the i-th component (energy unit)
+variable Comp_Dens_Alpha_A      equal 2.0
+
+# ------------------- Other stuff... ----------------------------------
+#
+variable Load_File_Flag equal 0 # Do (1) or do not (0) employ density-balancing file
+variable ADRESS_Flag    equal 0 # Perform 0: H-AdResS or 1: AdresS
+variable HY_Symmetric   equal 1 # Do (1) or do not (0) consider symmetry hybrid region
+
+variable        GCS_flag            equal 1
+variable        GCS_Seed            equal 123
+variable        GCS_Stiff           equal 0.1
+variable        GCS_Temp            equal 2.0
+variable        GCS_Start           equal 2000000
+variable        GCS_End             equal 20000000
+variable        GCS_exch_Reser_freq equal 100000
+variable        GCS_freq_Samp       equal 10
+variable        GCS_freq            equal 1000
+variable        GCS_dens_LJ1_F      equal 0.864
+variable        GCS_dens_LJ1_L      equal 0.864
+variable        GCS_dens_LJ1_R      equal 0.864
+variable        GCS_eps             equal 0.0
+variable        GCS_sig             equal 1.0
+
+variable        GCS_RColi           equal 0.0
+variable        GCS_RColMax         equal 20.0
+variable        GCS_Expand_Start    equal 2350000
+variable        GCS_Expand_Rate     equal 0.1
+
+variable        xmin equal -17
+variable        xmax equal 17
+variable        zmin equal -3
+variable        zmax equal 3
+variable        z_release equal 0
+
+#######################################################################
+
+read_restart /data/bee8/diazd/projects/Parabolic_flow/output_files/BUILD/BUILD_TEST/TEST.restart
+#reset_timestep 0
+neighbor 0.5 bin
+neigh_modify every 10 delay 10 check yes
+mass * 1.0
+
+########################################################################
+#                  Force Field
+########################################################################
+
+#
+# pair_style
+#  ideal/lj/cut/coul/dsf/capped/hars/at Alpha LJcutoff Coulcutoff Rcap All_AT Flag_Load_File
+#           Alpha = Damping coefficient in DSF potential (1.0/distance units)
+#        LJcutoff = global cutoff for Lennard Jones interactions (distance units)
+#      Coulcutoff = global cutoff for DSF coulombic interactions (distance units)
+#            Rcap = Capping radius for Lennard Jones interactions (distance units)
+#          All_AT = Fully atomic simulation flag
+#                        0: Fully atomic simulation is off and HAdResS is on
+#                        1: Fully atomic simulation is on and HAdResS is off
+#  Flag_Load_File = Flag of employing compensation energy file, = {0}or {1}
+#                        0: Do not employ compensation energy until T<sub>p</sub><sup>Start</sup>
+#                        1: Employ compensation energy file immediately
+#
+#  ideal/lj/cut/hars/cg cutoff All_CG Flag_Load_File
+#          cutoff = global cutoff for Lennard Jones interactions (distance units)
+#          All_CG = Fully coarse-grained simulation
+#                        0: Fully coarse-grained simulation is off and HAdResS is on
+#                        1: Fully coarse-grained simulation is on and HAdResS is off
+#  Flag_Load_File = Flag of employing compensation energy file
+#                        0: Do not employ compensation energy until T_p^Start
+#                        1: Employ compensation energy file immediately
+#
+
+
+# Pair styles for non-bonded interactions
+pair_style      hybrid/overlay lj/cut 2.5 ideal/gas/HAdResS/Coarsegrained 2.2 0 0 ideal/lj/cut/Capped/HAdResS/Atomistic 2.5 0.1 0 0 
+pair_modify     shift yes tail no mix geometric
+
+pair_coeff      1 1 ideal/gas/HAdResS/Coarsegrained         0.0 2.2
+pair_coeff      1 1 ideal/lj/cut/Capped/HAdResS/Atomistic   1.00 1.00 2.50
+pair_coeff      1 2 lj/cut                                  1.00 1.00 1.122462048309373
+pair_coeff      2 2 lj/cut                                  0 0 1.122462048309373
+#pair_coeff      2 2 harmonic/cut                            1000 1.1626 2.5   # w-w 
+
+#######################################################################
+# lambdah/ideal/calc
+#
+#     N_H-mol = Number of molecular types within the low resolution
+#        L_HY = Length of Hybrid region
+#        L_AT = Length of Atomistic (high resolution) region
+#           v = Power law exponent
+#      P_flag =
+#               0: Constant-pressure route is off
+#               1: Constant-pressure route is on
+#     dlamb^i = Bin size of ith component in constant-pressure route
+#   dT_p^Samp = Sampling time step interval of constant-pressure route
+#        dT_p = Time step interval of constant-pressure route
+#   T_p^Start = Starting time step of constant-pressure route
+#     T_p^End = Ending time step of constant-pressure route
+# T_p^Start,i = Starting time step of constant-pressure route for ith component
+#   HY_Shape  = Shape of Hybrid region:
+#                      slab: is for rectangular hybrid region
+#                    sphere: is for spherical hybrid region
+#                  cylinder: is for cylinderical hybrid region
+#      D_flag =
+#               0: Constant-density route is off
+#               1: Constant-density route is on
+#    Deltax^i = Bin size of ith component in constant-density route (length unit)
+#  dT_d^Sampl = Sampling time step interval of constant-density route
+#        dT_d = Time step interval of constant-density route
+#  T_d_^Start = Starting time step of constant-density route
+#     T_d^End = Ending time step of constant-density route
+# T_d^Start,i = Starting time step of constant-density route for ith component
+#     sigma^0 = Width of gaussian function in constant-density route for ith component (length unit)
+#         R^i = Range of gaussian function in constant-density route for ith component (length unit)
+#     rho_0^i = Reference number density in constant-density route for ith component
+#         c^i = Prefactor in constant-density route for ith component (energy unit)
+#   file_flag =
+#               0: Do not employ density-balancing file
+#               1: Employ density-balancing file
+# AdResS_flag =
+#               0: Perform H-AdResS
+#               1: Perform AdResS
+#  SymHY_flag =
+#               0: Do no consider symmetric hybrid region
+#               1: Consider symmetric hybrid region (applicable only in slab hybrid region)
+
+fix 1 flow LambdaH/ideal/calc ${Comp_Dens_nMolType} &
+                             ${Comp_HY_Size} &
+                             ${Comp_AT_Size} &
+                             ${Comp_Lam_Exp} &
+                             ${Comp_Pres_Switch} &
+                             ${Comp_Pres_Lambda_Size_A}  &
+                             ${Comp_Pres_Samp_Freq} &
+                             ${Comp_Pres_Freq} &
+                             ${Comp_Pres_Start} &
+                             ${Comp_Pres_End} &
+                             ${Comp_Pres_Start_A} &
+                             ${Hyb_Shape} &
+                             ${Comp_Dens_Switch} &
+                             ${Comp_Dens_Bin_Size_A}  &
+                             ${Comp_Dens_Samp_Freq} &
+                             ${Comp_Dens_Freq} &
+                             ${Comp_Dens_Start} &
+                             ${Comp_Dens_End} &
+                             ${Comp_Dens_Start_A}  &
+                             ${Comp_Dens_Sigma_A}  &
+                             ${Comp_Dens_Range_Int_A}  &
+                             ${Comp_Dens_Ref_Dens_A}  &
+                             ${Comp_Dens_Alpha_A}  &
+                             ${Load_File_Flag} &
+                             ${ADRESS_Flag} &
+                             ${HY_Symmetric} &
+                             ${GCS_flag} ${GCS_Seed} ${GCS_Stiff} ${GCS_Temp} ${GCS_freq_Samp} ${GCS_freq} ${GCS_Start} ${GCS_End} ${GCS_exch_Reser_freq} &
+                                                  ${GCS_dens_LJ1_F} &
+                                                  ${GCS_dens_LJ1_L} &
+                                                  ${GCS_dens_LJ1_R} &
+                                                  ${xmin} ${xmax} ${zmin} ${zmax} ${z_release} &
+                                                  ${GCS_RColi} ${GCS_RColMax} ${GCS_Expand_Start} ${GCS_Expand_Rate}
+
+########################################################################
+
+thermo_modify 	flush yes
+thermo 		${Ndump}
+thermo_style    custom step temp press density 
+
+dump trj all custom ${Ndumptrj} ${root}.lammpstrj id type element x y z
+
+group A type 1
+compute chunkDensityA A chunk/atom bin/1d x lower 0.1 units box
+fix DensityA A ave/chunk 10 100 100000 chunkDensityA density/number ave one file ${root}.profile_Dens_A
+
+timestep 0.001
+fix 4 flow momentum 1 linear 1 1 1
+
+fix 2 flow nve
+fix 3 flow langevin ${Temp} ${Temp} 1.0 34813984
+
+fix freezeWall boundary setforce 0.0 0.0 0.0
+
+run ${Nrun}
+write_restart /data/bee8/diazd/projects/Parabolic_flow/output_files/SPARTIAN/SPARTIAN_TEST/TEST.restart

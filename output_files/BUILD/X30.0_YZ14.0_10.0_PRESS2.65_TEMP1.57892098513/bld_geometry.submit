@@ -1,0 +1,16 @@
+#!/bin/bash
+#SBATCH -o bld_geometry.out
+#SBATCH -e bld_geometry.err
+#SBATCH -J bld_geometry
+
+#SBATCH --partition=CPU_Std32
+#SBATCH --ntasks=32
+#SBATCH --ntasks-per-core=1
+
+#SBATCH --mail-type=END
+#SBATCH --mail-user=diazd@mpip-mainz.mpg.de
+
+# Wall clock limit:
+#SBATCH --time=32:00:00
+
+mpirun -np 32 lmp_mpi -in bld_geometry.in
